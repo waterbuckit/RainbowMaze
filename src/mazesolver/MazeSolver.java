@@ -20,18 +20,18 @@ import static mazesolver.Wall.*;
  * @author waterbucket
  */
 public class MazeSolver {
-    /** unicorn puke */
+    /* unicorn puke */
 //    private static final float HUE_STEP = 0.05f;
-    /** tasteful rainbow fade */
+    /* tasteful rainbow fade */
 //    private static final float HUE_STEP = 0.001f;
-    /** quicker fade */
+    /* /quicker fade */
     private static final float HUE_STEP = 0.005f;
 
-    /** default:75 faster:50 asap:0 */
-    private static final int SLEEP_TIME = 75;
+    /* default:75 faster:50 asap:0 */
+    private static final int SLEEP_TIME = 15;
 
-    private static final int MAZE_WIDTH = 250;
-    private static final int MAZE_HEIGHT = 250;
+    private static final int MAZE_WIDTH = 50;
+    private static final int MAZE_HEIGHT = 50;
 
     private static float hue = 0;
 
@@ -58,7 +58,7 @@ public class MazeSolver {
         ms.begin();
     }
 
-    Optional<Maze.Cell> pickNext(Maze.Cell cell) {
+    private Optional<Maze.Cell> pickNext(Maze.Cell cell) {
         Maze.Cell[] list = maze.getNeighbours(cell)
                 .filter(Are.NOT(Maze.Cell::isVisited))
                 .toArray(Maze.Cell[]::new);
@@ -76,7 +76,7 @@ public class MazeSolver {
     private void sleep() {
         try {
             Thread.sleep(SLEEP_TIME);
-        } catch (InterruptedException e) {
+        } catch (InterruptedException ignored) {
 
         }
     }
@@ -86,14 +86,14 @@ public class MazeSolver {
         int initialY = (int) (Math.random() * MAZE_HEIGHT);
         LinkedList<Maze.Cell> stack = new LinkedList<>();
         Maze.Cell current = maze.cells[initialY][initialX];
-        current.setVisited(true);
+        current.setVisited();
         current.setIsActive(true);
         while (solving) {
             Optional<Maze.Cell> nextOpt = pickNext(current);
             final Maze.Cell temp_current = current;
             current = nextOpt.map(next -> {
                 temp_current.setIsActive(false);
-                next.setVisited(true);
+                next.setVisited();
                 next.setIsActive(true);
                 Wall.removeBetween(temp_current, next);
                 stack.add(next);
@@ -122,7 +122,7 @@ public class MazeSolver {
             return new Dimension(size,size);
         }
 
-        public MazePanel() {
+        MazePanel() {
             this.addComponentListener(new ComponentAdapter() {
                 @Override
                 public void componentResized(ComponentEvent e) {
@@ -165,7 +165,7 @@ public class MazeSolver {
 
         private Cell[][] cells;
 
-        public Maze(int width, int height) {
+        Maze(int width, int height) {
             this.cells = setUpCells(width, height);
         }
 
@@ -175,7 +175,7 @@ public class MazeSolver {
          * @param y
          * @return cell if one is present at specificed location
          */
-        public Optional<Cell> get(int x, int y) {
+        Optional<Cell> get(int x, int y) {
             //for edge safety
             //can be converted for wrapping if needed using modulus
             try {
@@ -214,12 +214,12 @@ public class MazeSolver {
         class Cell {
 
             private final Point pos;
-            public BitSet walls;
+            BitSet walls;
             private boolean visited;
             private boolean active;
             private float hue;
 
-            public Cell(int x, int y) {
+            Cell(int x, int y) {
                 this.hue = 0;
                 this.pos = new Point(x, y);
                 this.visited = false;
@@ -228,19 +228,19 @@ public class MazeSolver {
             }
 
 
-            public Point getPos() {
+            Point getPos() {
                 return pos;
             }
 
-            public boolean isJunction() {
+            boolean isJunction() {
                 return this.walls.cardinality() < 2;
             }
 
-            public void setIsActive(boolean active) {
+            void setIsActive(boolean active) {
                 this.active = active;
             }
 
-            public boolean isActive() {
+            boolean isActive() {
                 return this.active;
             }
 
@@ -250,25 +250,25 @@ public class MazeSolver {
                 }
             }
 
-            public void setWall(Wall... walls) {
+            void setWall(Wall... walls) {
                 controlWalls(true, walls);
             }
 
-            public void unsetWall(Wall... walls) {
+            void unsetWall(Wall... walls) {
                 controlWalls(false, walls);
             }
 
-            public boolean isVisited() {
+            boolean isVisited() {
                 return visited;
             }
 
-            public void setVisited(boolean visited) {
+            void setVisited() {
                 this.hue = MazeSolver.hue;
                 MazeSolver.hue += HUE_STEP;
-                this.visited = visited;
+                this.visited = true;
             }
 
-            public void drawBorder(Graphics2D g, Dimension dim) {
+            void drawBorder(Graphics2D g, Dimension dim) {
                 g.setColor(Color.black);
                 this.walls.stream().forEach(i -> {
                     Rectangle r = Wall.values()[i].getRect();
@@ -279,7 +279,7 @@ public class MazeSolver {
                 });
             }
 
-            public void drawBox(Graphics2D g, Dimension dim) {
+            void drawBox(Graphics2D g, Dimension dim) {
                 if (isVisited()) {
                     g.setColor(Color.getHSBColor(MazeSolver.hue - this.hue, 1f, 0.8f));
                 }
